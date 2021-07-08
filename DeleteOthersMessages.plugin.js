@@ -73,7 +73,7 @@ module.exports = (_ => {
 			onLoad () {
 				this.defaults = {
 					general: {
-						storeMessages: {value: true, description: "Store Deleted Messages (you won't have to delete them again')"},
+						storeMessages: {value: true, description: this.store_messages_option},
 					},
 				};
 			}
@@ -82,6 +82,31 @@ module.exports = (_ => {
 				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.SettingsUtils, "updateLocalSettings", {after: e => BDFDB.ReactUtils.forceUpdate(toggleButton)});
 				
 				BDFDB.PatchUtils.forceAllUpdates(this);
+			}
+			
+			getSettingsPanel (collapseStates = {}) {
+				let settingsPanel;
+				return settingsPanel = BDFDB.PluginUtils.createSettingsPanel(this, {
+					collapseStates: collapseStates,
+					children: _ => {
+						let settingsItems = [];
+						
+						settingsItems.push(Object.keys(this.defaults.general).map(key => BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsSaveItem, {
+							type: "Switch",
+							plugin: this,
+							keys: ["general", key],
+							label: this.labels.store_messages_option,
+							value: this.settings.general[key],
+							onChange: valueObj => {
+								this.SettingsUpdated = true;
+								this.settings.dates[key] = valueObj;
+								BDFDB.DataUtils.save(this.settings.dates, this, "dates");
+							}
+						})));
+						
+						return settingsItems.flat(10);
+					}
+				});
 			}
 
 			onMessageContextMenu (e) {
@@ -107,7 +132,6 @@ module.exports = (_ => {
 				}
 			}
 
-						
 			onNativeContextMenu (e) {
 				this.injectSearchItem(e);
 			}
@@ -134,6 +158,7 @@ module.exports = (_ => {
 			setLabelsByLanguage () {
 				return {
 					delete_message_option: "Delete Message Locally",
+					store_messages_option: "Store Deleted Messages (you won't have to delete them again')"
 				};
 			}
 		};
